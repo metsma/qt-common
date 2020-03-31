@@ -54,7 +54,6 @@ public:
 #else
 		QSettings s2(QSettings::SystemScope, qApp->organizationName(), qApp->applicationName());
 #endif
-
 		for(const QString &key: s2.childKeys())
 		{
 			if(dataobject.contains(key))
@@ -66,8 +65,24 @@ public:
 					dataobject[key] = QJsonValue(value.toString()); break;
 				case QVariant::StringList:
 					dataobject[key] = QJsonValue(QJsonArray::fromStringList(value.toStringList())); break;
+				case QVariant::Map:
+					dataobject[key] = QJsonValue(QJsonObject::fromVariantMap(value.toMap())); break;
+				case QVariant::Hash:
+					dataobject[key] = QJsonValue(QJsonObject::fromVariantHash(value.toHash())); break;
 				default: break;
 				}
+			}
+		}
+		for(const QString &key: s2.childGroups())
+		{
+			if(dataobject.contains(key))
+			{
+				QVariantMap map;
+				s2.beginGroup(key);
+				for(const QString &valuekey: s2.childKeys())
+					map[valuekey] = s2.value(valuekey);
+				s2.endGroup();
+				dataobject[key] = QJsonValue(QJsonObject::fromVariantMap(map));
 			}
 		}
 	}
